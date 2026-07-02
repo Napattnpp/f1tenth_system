@@ -1,7 +1,3 @@
-[submodule "vesc"]
-	path = vesc
-	url = https://github.com/f1tenth/vesc.git
-	branch = ros2
 [submodule "ackermann_mux"]
 	path = ackermann_mux
 	url = https://github.com/f1tenth/ackermann_mux.git
@@ -17,3 +13,7 @@
 [submodule "teleop_tools"]
 	path = teleop_tools
 	url = https://github.com/Napattnpp/teleop_tools.git
+[submodule "vesc"]
+	path = vesc
+	url = https://github.com/Napattnpp/vesc.git
+	branch = humble
