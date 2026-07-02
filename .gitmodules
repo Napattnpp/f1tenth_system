@@ -5,7 +5,15 @@
 [submodule "ackermann_mux"]
 	path = ackermann_mux
 	url = https://github.com/f1tenth/ackermann_mux.git
+[submodule "sllidar_ros2"]
+	path = sllidar_ros2
+	url = https://github.com/Slamtec/sllidar_ros2.git
+[submodule "imu_ros2"]
+	path = imu_ros2
+	url = https://github.com/Napattnpp/imu_ros2.git
+[submodule "urg_node2"]
+	path = urg_node2
+	url = https://github.com/Hokuyo-aut/urg_node2.git
 [submodule "teleop_tools"]
 	path = teleop_tools
-	url = https://github.com/f1tenth/teleop_tools.git
-	branch = humble-devel
+	url = https://github.com/Napattnpp/teleop_tools.git
