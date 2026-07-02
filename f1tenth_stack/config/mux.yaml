@@ -9,3 +9,8 @@ ackermann_mux:
         topic   : teleop
         timeout : 0.2
         priority: 100
+    locks:
+      pause:
+        topic   : pause_navigation
+        timeout : 0.0
+        priority: 50
