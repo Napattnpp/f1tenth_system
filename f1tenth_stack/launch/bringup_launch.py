@@ -26,6 +26,7 @@ from launch.substitutions import Command
 from launch.substitutions import LaunchConfiguration
 from launch.actions import DeclareLaunchArgument
 from launch.actions import IncludeLaunchDescription
+from launch.conditions import LaunchConfigurationEquals
 from launch_xml.launch_description_sources import XMLLaunchDescriptionSource
 from ament_index_python.packages import get_package_share_directory
 import os
@@ -41,15 +42,30 @@ def generate_launch_description():
         'config',
         'vesc.yaml'
     )
-    sensors_config = os.path.join(
+    ust10lx_config = os.path.join(
         get_package_share_directory('f1tenth_stack'),
         'config',
-        'sensors.yaml'
+        'ust10lx.yaml'
+    )
+    sllidar_s1_config = os.path.join(
+        get_package_share_directory('f1tenth_stack'),
+        'config',
+        'sllidar_s1.yaml'
     )
     mux_config = os.path.join(
         get_package_share_directory('f1tenth_stack'),
         'config',
         'mux.yaml'
+    )
+    icm20948_config = os.path.join(
+        get_package_share_directory('f1tenth_stack'),
+        'config',
+        'icm20948.yaml'
+    )
+    bmi160_config = os.path.join(
+        get_package_share_directory('f1tenth_stack'),
+        'config',
+        'bmi160.yaml'
     )
 
     joy_la = DeclareLaunchArgument(
@@ -60,16 +76,43 @@ def generate_launch_description():
         'vesc_config',
         default_value=vesc_config,
         description='Descriptions for vesc configs')
-    sensors_la = DeclareLaunchArgument(
-        'sensors_config',
-        default_value=sensors_config,
-        description='Descriptions for sensor configs')
+    ust10lx_la = DeclareLaunchArgument(
+        'ust10lx_config',
+        default_value=ust10lx_config,
+        description='Descriptions for urg sensor configs')
+    sllidar_s1_la = DeclareLaunchArgument(
+        'sllidar_s1_config',
+        default_value=sllidar_s1_config,
+        description='Descriptions for sllidar-s1 configs')
     mux_la = DeclareLaunchArgument(
         'mux_config',
         default_value=mux_config,
         description='Descriptions for ackermann mux configs')
+    icm20948_la = DeclareLaunchArgument(
+        'icm20948_config',
+        default_value=icm20948_config,
+        description='Descriptions for icm20948 configs')
+    bmi160_la = DeclareLaunchArgument(
+        'bmi160_config',
+        default_value=bmi160_config,
+        description='Descriptions for bmi160 configs')
 
-    ld = LaunchDescription([joy_la, vesc_la, sensors_la, mux_la])
+    # LiDAR and IMU model selection
+    lidar_model_la = DeclareLaunchArgument(
+        'lidar_model',
+        default_value='sllidar',
+        description='LiDAR model to use (sllidar or urg)'
+    )
+    imu_model_la = DeclareLaunchArgument(
+        'imu_model',
+        default_value='icm20948',
+        description='IMU model to use (icm20948, bmi160, or none)'
+    )
+
+    ld = LaunchDescription([
+        joy_la, vesc_la, ust10lx_la, sllidar_s1_la, mux_la, icm20948_la, bmi160_la,
+        lidar_model_la, imu_model_la
+    ])
 
     joy_node = Node(
         package='joy',
@@ -87,7 +130,11 @@ def generate_launch_description():
         package='vesc_ackermann',
         executable='ackermann_to_vesc_node',
         name='ackermann_to_vesc_node',
-        parameters=[LaunchConfiguration('vesc_config')]
+        parameters=[LaunchConfiguration('vesc_config')],
+        remappings=[
+            ('commands/motor/speed', 'commands/motor/unsmoothed_speed'),
+            ('commands/servo/position', 'commands/servo/unsmoothed_position')
+        ]
     )
     vesc_to_odom_node = Node(
         package='vesc_ackermann',
@@ -107,11 +154,38 @@ def generate_launch_description():
         name='throttle_interpolator',
         parameters=[LaunchConfiguration('vesc_config')]
     )
+    # Conditional LiDAR nodes
     urg_node = Node(
         package='urg_node',
         executable='urg_node_driver',
         name='urg_node',
-        parameters=[LaunchConfiguration('sensors_config')]
+        parameters=[LaunchConfiguration('ust10lx')],
+        condition=LaunchConfigurationEquals('lidar_model', 'urg')
+    )
+    sllidar_ros2_node = Node(
+        package='sllidar_ros2',
+        executable='sllidar_node',
+        name='sllidar_node',
+        parameters=[LaunchConfiguration('sllidar_s1_config')],
+        output='screen',
+        condition=LaunchConfigurationEquals('lidar_model', 'sllidar')
+    )
+    # Conditional IMU nodes
+    icm20948_node = Node(
+        package='icm20948_ros2',
+        executable='icm20948_node_exe',
+        name='icm20948_node',
+        parameters=[LaunchConfiguration('icm20948_config')],
+        output='screen',
+        condition=LaunchConfigurationEquals('imu_model', 'icm20948')
+    )
+    bmi160_node = Node(
+        package='bmi160_ros2',
+        executable='bmi160_node_exe',
+        name='bmi160_node',
+        parameters=[LaunchConfiguration('bmi160_config')],
+        output='screen',
+        condition=LaunchConfigurationEquals('imu_model', 'bmi160')
     )
     ackermann_mux_node = Node(
         package='ackermann_mux',
@@ -120,11 +194,17 @@ def generate_launch_description():
         parameters=[LaunchConfiguration('mux_config')],
         remappings=[('ackermann_cmd_out', 'ackermann_drive')]
     )
-    static_tf_node = Node(
+    static_tf_lidar_node = Node(
         package='tf2_ros',
         executable='static_transform_publisher',
         name='static_baselink_to_laser',
-        arguments=['0.27', '0.0', '0.11', '0.0', '0.0', '0.0', 'base_link', 'laser']
+        arguments=['0.0', '0.0', '0.0', '0.0', '0.0', '0.0', 'base_link', 'laser']
+    )
+    static_tf_imu_node = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        name='static_baselink_to_imu',
+        arguments=['0.0', '0.0', '0.0', '0.0', '0.0', '0.0', 'base_link', 'imu_link']
     )
 
     # finalize
@@ -133,9 +213,16 @@ def generate_launch_description():
     ld.add_action(ackermann_to_vesc_node)
     ld.add_action(vesc_to_odom_node)
     ld.add_action(vesc_driver_node)
-    # ld.add_action(throttle_interpolator_node)
+    ld.add_action(throttle_interpolator_node)
+
+    # Add conditional lidar and imu
     ld.add_action(urg_node)
+    ld.add_action(sllidar_ros2_node)
+    ld.add_action(icm20948_node)
+    ld.add_action(bmi160_node)
+
     ld.add_action(ackermann_mux_node)
-    ld.add_action(static_tf_node)
+    ld.add_action(static_tf_lidar_node)
+    ld.add_action(static_tf_imu_node)
 
     return ld
