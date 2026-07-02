@@ -172,17 +172,17 @@ def generate_launch_description():
     )
     # Conditional IMU nodes
     icm20948_node = Node(
-        package='icm20948_ros2',
-        executable='icm20948_node_exe',
-        name='icm20948_node',
+        package='imu_ros2',
+        executable='imu_node',
+        name='imu_node_icm20948',
         parameters=[LaunchConfiguration('icm20948_config')],
         output='screen',
         condition=LaunchConfigurationEquals('imu_model', 'icm20948')
     )
     bmi160_node = Node(
-        package='bmi160_ros2',
-        executable='bmi160_node_exe',
-        name='bmi160_node',
+        package='imu_ros2',
+        executable='imu_node',
+        name='imu_node_bmi160',
         parameters=[LaunchConfiguration('bmi160_config')],
         output='screen',
         condition=LaunchConfigurationEquals('imu_model', 'bmi160')
