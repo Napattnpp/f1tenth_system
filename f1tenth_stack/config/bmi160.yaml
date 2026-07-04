@@ -8,6 +8,8 @@
 
     accel_range_g: 2
     gyro_range_dps: 250
+    gyro_scale_z: 1.0
+    auto_calibrate_gyro: true
 
     # These values should be filled after running calibrate_gyro
     gyro_bias_x: 0.0

@@ -187,6 +187,21 @@ def generate_launch_description():
         output='screen',
         condition=LaunchConfigurationEquals('imu_model', 'bmi160')
     )
+    imu_filter_node = Node(
+        package='imu_filter_madgwick',
+        executable='imu_filter_madgwick_node',
+        name='imu_filter_node',
+        output='screen',
+        parameters=[{
+            'use_mag': False,
+            'publish_tf': False,
+            'world_frame': 'enu',
+        }],
+        remappings=[
+            ('imu/data_raw', 'imu/data_raw'),
+            ('imu/data', 'imu/data')
+        ]
+    )
     ackermann_mux_node = Node(
         package='ackermann_mux',
         executable='ackermann_mux',
@@ -224,5 +239,8 @@ def generate_launch_description():
     ld.add_action(ackermann_mux_node)
     ld.add_action(static_tf_lidar_node)
     ld.add_action(static_tf_imu_node)
+
+    # Uncomment this to run the IMU orientation filter when using IMU for VESC odom
+    # ld.add_action(imu_filter_node)
 
     return ld
