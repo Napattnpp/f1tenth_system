@@ -213,13 +213,13 @@ def generate_launch_description():
         package='tf2_ros',
         executable='static_transform_publisher',
         name='static_baselink_to_laser',
-        arguments=['0.0', '0.0', '0.0', '0.0', '0.0', '0.0', 'base_link', 'laser']
+        arguments=['0.165', '0.0', '0.25', '0.0', '0.0', '0.0', 'base_link', "laser"]
     )
     static_tf_imu_node = Node(
         package='tf2_ros',
         executable='static_transform_publisher',
         name='static_baselink_to_imu',
-        arguments=['0.0', '0.0', '0.0', '0.0', '0.0', '0.0', 'base_link', 'imu_link']
+        arguments=['0.28', '0.0', '0.09', '0.0', '0.0', '0.0', 'base_link', 'imu_link']
     )
 
     # finalize
